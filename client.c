@@ -23,6 +23,9 @@
   #include <string.h>
   #include <stdlib.h>
 
+  /**
+   * Prints the specified message and then terminate.
+   */
   void error(char *msg)
   {
       perror(msg);
@@ -40,16 +43,16 @@
 
       char buffer[256];
       if (argc < 3) {
-	fprintf(stderr,"usage %s hostname port\n", argv[0]);
+	fprintf(stderr,"használat: %s hostname port\n", argv[0]);
 	exit(0);
       }
       portno = atoi(argv[2]);
       sockfd = socket(AF_INET, SOCK_STREAM, 0);
       if (sockfd < 0) 
-	  error("ERROR opening socket");
+	  error("Hiba a socket létrehozásában.");
       server = gethostbyname(argv[1]);
       if (server == NULL) {
-	  fprintf(stderr,"ERROR, no such host\n");
+	  fprintf(stderr,"Hiba, nem található ilyen nevű host.\n");
 	  exit(0);
       }
       bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -59,14 +62,14 @@
 	  server->h_length);
       serv_addr.sin_port = htons(portno);
       if (connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) 
-	  error("ERROR connecting");
+	  error("Sikertelen csatlakozás.");
       
       while(1) {
 	
 	bzero(buffer,256);
 	n = read(sockfd,buffer,255);
 	if (n < 0) 
-	    error("ERROR reading from socket");
+	    error("Sikertelen olvasás a socketről.");
 	if (strcmp(buffer,"") == 0) {
 	  printf("A szerver lecsatlakazott. A játéknak vége!\n");
 	  exit(0);
@@ -80,12 +83,15 @@
 	  started = 1;
 	}
 	if (started) {
-	  printf("Add meg, hogy melyik bábuval szeretnél lépni (0/1)! Vagy válaszd a feladási opciót a (feladom) üzenettel!\n");
-	  bzero(buffer,256);
-	  fgets(buffer,255,stdin);
+	  do {
+	    printf("Add meg, hogy melyik bábuval szeretnél lépni (0/1)! Vagy válaszd a feladási opciót a (feladom) üzenettel!\n");
+	    bzero(buffer,256);
+	    fgets(buffer,255,stdin);
+	    
+	  } while (strcmp(buffer,"feladom\n") != 0 && strcmp(buffer,"0\n") != 0 && strcmp(buffer,"1\n") != 0);
 	  n = write(sockfd,buffer,strlen(buffer));
 	  if (n < 0) 
-	      error("ERROR writing to socket");
+	    error("Sikertelen írás a socketre.");
 	}      
 	
       }
